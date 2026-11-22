@@ -1,0 +1,178 @@
+<div class="tabs no-print">
+  <button
+    type="button"
+    class="btn"
+    [class.active]="view() === 'inventory'"
+    (click)="setView('inventory')"
+  >
+    Inventory Valuation
+  </button>
+  <button
+    type="button"
+    class="btn"
+    [class.active]="view() === 'transactions'"
+    (click)="setView('transactions')"
+  >
+    Transaction History
+  </button>
+</div>
+
+@if (error()) {
+  <p class="alert danger no-print">{{ error() }}</p>
+}
+
+@if (view() === 'inventory') {
+  @if (inventory(); as r) {
+    <section class="card">
+      <div class="report-head">
+        <h2>Inventory Valuation Report</h2>
+        <p>Oro Construction Soil and Rock, Tagum City, Davao del Norte</p>
+        <p>Generated: {{ r.generated_at }}</p>
+      </div>
+
+      <div class="actions no-print" style="margin-bottom: 12px">
+        <button type="button" class="btn primary" (click)="print()">Print / Save as PDF</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Category</th>
+              <th>Unit</th>
+              <th class="num">Unit Price (₱)</th>
+              <th class="num">Stock</th>
+              <th class="num">Min Stock</th>
+              <th class="num">Value (₱)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of r.items; track i.id) {
+              <tr>
+                <td>{{ i.name }}</td>
+                <td>{{ i.category }}</td>
+                <td>{{ i.unit }}</td>
+                <td class="num">{{ i.unit_price | number: '1.2-2' }}</td>
+                <td class="num">{{ i.current_stock | number: '1.2-2' }}</td>
+                <td class="num">{{ i.min_stock | number: '1.2-2' }}</td>
+                <td class="num">{{ i.value | number: '1.2-2' }}</td>
+                <td>
+                  <span class="badge" [class.low]="i.status === 'Low stock'" [class.ok]="i.status !== 'Low stock'">
+                    {{ i.status }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty">No materials recorded yet.</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">Total Inventory Value</td>
+              <td class="num">₱{{ r.total_value | number: '1.2-2' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  }
+}
+
+@if (view() === 'transactions') {
+  <section class="card no-print">
+    <h2>Filters</h2>
+    <form [formGroup]="filters" (ngSubmit)="loadTransactions()" class="filters">
+      <label>
+        From
+        <input type="date" formControlName="from" />
+      </label>
+      <label>
+        To
+        <input type="date" formControlName="to" />
+      </label>
+      <label>
+        Type
+        <select formControlName="type">
+          <option value="">All types</option>
+          <option value="stock_in">Stock In</option>
+          <option value="stock_out">Stock Out</option>
+          <option value="adjustment">Adjustment</option>
+        </select>
+      </label>
+      <div class="actions">
+        <button type="submit" class="btn primary">Apply</button>
+        <button type="button" class="btn" (click)="clearFilters()">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  @if (transactions(); as r) {
+    <section class="card">
+      <div class="report-head">
+        <h2>Transaction History Report</h2>
+        <p>Oro Construction Soil and Rock, Tagum City, Davao del Norte</p>
+        <p>
+          Period:
+          {{ r.from || 'start' }} to {{ r.to || 'present' }}
+          &nbsp;|&nbsp; Records: {{ r.count }}
+        </p>
+        <p>Generated: {{ r.generated_at }}</p>
+      </div>
+
+      <div class="actions no-print" style="margin-bottom: 12px">
+        <button type="button" class="btn primary" (click)="print()">Print / Save as PDF</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Material</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th class="num">Quantity</th>
+              <th>Unit</th>
+              <th class="num">Balance After</th>
+              <th>Supplier / Customer</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of r.items; track t.id) {
+              <tr>
+                <td>{{ t.date }}</td>
+                <td>{{ t.material }}</td>
+                <td>{{ t.category }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.ok]="t.type === 'stock_in'"
+                    [class.low]="t.type === 'stock_out'"
+                    [class.adj]="t.type === 'adjustment'"
+                  >
+                    {{ label(t.type) }}
+                  </span>
+                </td>
+                <td class="num">{{ t.quantity | number: '1.2-2' }}</td>
+                <td>{{ t.unit }}</td>
+                <td class="num">{{ t.balance_after | number: '1.2-2' }}</td>
+                <td>{{ t.party_name }}</td>
+                <td>{{ t.remarks }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="empty">No transactions found for these filters.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+}

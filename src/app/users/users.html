@@ -1,0 +1,240 @@
+<div class="tabs" role="tablist">
+  <button type="button" class="tab" [class.active]="tab() === 'accounts'" (click)="setTab('accounts')">
+    👥 Accounts
+    @if (pendingUsers().length > 0) {
+      <span class="count hot">{{ pendingUsers().length }}</span>
+    }
+  </button>
+  <button type="button" class="tab" [class.active]="tab() === 'resets'" (click)="setTab('resets')">
+    🔑 Password resets
+    @if (pendingResets().length > 0) {
+      <span class="count hot">{{ pendingResets().length }}</span>
+    }
+  </button>
+</div>
+
+@if (message()) {
+  <p class="alert success">{{ message() }}</p>
+}
+@if (error()) {
+  <p class="alert danger">{{ error() }}</p>
+}
+
+@if (tab() === 'accounts') {
+  <!-- Pending sign-ups -->
+  @if (pendingUsers().length > 0) {
+    <section class="card pending-card">
+      <h2>Pending approvals</h2>
+      <p class="sub">New sign-ups waiting for you. They cannot sign in until you approve them.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Requested role</th>
+              <th>Requested on</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of pendingUsers(); track u.id) {
+              <tr>
+                <td>{{ u.name }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="badge role">{{ u.role }}</span></td>
+                <td>{{ u.created_at | date: 'MMM d, y, h:mm a' }}</td>
+                <td class="row-actions">
+                  <button type="button" class="btn small primary" (click)="approveUser(u)">Approve</button>
+                  <button type="button" class="btn small danger" (click)="rejectUser(u)">Reject</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- Add or edit a user -->
+  <section class="card">
+    <h2>{{ editingId() ? 'Edit User' : 'Add User' }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="grid">
+      <label>
+        Full name
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label>
+        Email
+        <input type="email" formControlName="email" autocomplete="off" />
+      </label>
+
+      <label>
+        Role
+        <select formControlName="role">
+          <option value="admin">Admin</option>
+          <option value="inventory">Inventory</option>
+          <option value="management">Management</option>
+        </select>
+      </label>
+
+      <label>
+        Password
+        <input type="password" formControlName="password" autocomplete="new-password" />
+        @if (editingId()) {
+          <span class="hint">Leave blank to keep the current password.</span>
+        } @else {
+          <span class="hint">At least 8 characters.</span>
+        }
+      </label>
+
+      <div class="full actions">
+        <button type="submit" class="btn primary">
+          {{ editingId() ? 'Update User' : 'Add User' }}
+        </button>
+        @if (editingId()) {
+          <button type="button" class="btn" (click)="clearForm()">Cancel</button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <!-- All accounts -->
+  <section class="card">
+    <h2>User Accounts</h2>
+    <p class="sub">
+      Suspending an account signs the person out and blocks sign-in. Nothing is deleted, and you can
+      reactivate the account at any time.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of otherUsers(); track u.id) {
+            <tr [class.suspended]="u.status === 'suspended'">
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              <td><span class="badge role">{{ u.role }}</span></td>
+              <td>
+                <span
+                  class="badge"
+                  [class.ok]="u.status === 'approved'"
+                  [class.low]="u.status === 'rejected'"
+                  [class.sus]="u.status === 'suspended'"
+                >
+                  {{ statusLabel(u) }}
+                </span>
+              </td>
+              <td class="row-actions">
+                @if (u.status === 'rejected') {
+                  <button type="button" class="btn small primary" (click)="approveUser(u)">Approve</button>
+                }
+                @if (u.status === 'suspended') {
+                  <button type="button" class="btn small primary" (click)="reactivateUser(u)">Reactivate</button>
+                }
+                <button type="button" class="btn small" (click)="edit(u)">Edit</button>
+                @if (u.status === 'approved') {
+                  <button
+                    type="button"
+                    class="btn small warn"
+                    [disabled]="isSelf(u)"
+                    [title]="isSelf(u) ? 'You cannot suspend your own account' : 'Suspend this account'"
+                    (click)="suspendUser(u)"
+                  >
+                    Suspend
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty">No users found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else {
+  <!-- Password reset requests -->
+  <section class="card">
+    <h2>Password reset requests</h2>
+    <p class="sub">
+      When you approve a request, the person can set a new password the next time they sign in with
+      their email. It works only once and expires after 24 hours.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Requested</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Details</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of resets(); track r.id) {
+            <tr>
+              <td class="when">{{ r.created_at | date: 'MMM d, y, h:mm a' }}</td>
+              <td>
+                <div>{{ r.user.name }}</div>
+                <small class="muted">{{ r.user.email }}</small>
+              </td>
+              <td><span class="badge role">{{ r.user.role }}</span></td>
+              <td>
+                <span
+                  class="badge"
+                  [class.ok]="resetClass(r) === 'ok'"
+                  [class.low]="resetClass(r) === 'low'"
+                  [class.pend]="resetClass(r) === 'pend'"
+                >
+                  {{ resetLabel(r) }}
+                </span>
+              </td>
+              <td class="details">
+                @if (r.status === 'pending') {
+                  Waiting for your decision.
+                } @else if (isExpired(r)) {
+                  Expired on {{ r.expires_at | date: 'MMM d, y, h:mm a' }}. The user was not able to use it in time.
+                } @else if (r.status === 'approved') {
+                  Waiting for the user to set a new password. Valid until
+                  {{ r.expires_at | date: 'MMM d, y, h:mm a' }}.
+                } @else if (r.status === 'used') {
+                  New password set on {{ r.used_at | date: 'MMM d, y, h:mm a' }}.
+                } @else {
+                  Request rejected.
+                }
+              </td>
+              <td class="row-actions">
+                @if (r.status === 'pending') {
+                  <button type="button" class="btn small primary" (click)="approveReset(r)">Approve</button>
+                  <button type="button" class="btn small danger" (click)="rejectReset(r)">Reject</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">No password reset requests yet.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

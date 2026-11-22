@@ -1,0 +1,356 @@
+@if (error()) {
+  <p class="alert danger">{{ error() }}</p>
+}
+
+@if (data(); as d) {
+  <!-- Welcome -->
+  <section class="welcome">
+    <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap">
+      <app-logo variant="dark" [width]="200" [animated]="true" />
+      <div>
+        <h1>{{ greeting() }}, {{ auth.user()?.name }}</h1>
+        <p>{{ today }}</p>
+      </div>
+    </div>
+    <div class="quick">
+      @if (auth.canEdit()) {
+        <a routerLink="/transactions" class="qbtn primary hv">
+          <app-icon name="plus" [size]="16" [gap]="8" />Record stock movement
+        </a>
+        <a routerLink="/materials" class="qbtn hv">
+          <app-icon name="materials" [size]="16" [gap]="8" />Add material
+        </a>
+      }
+      <a routerLink="/reports" class="qbtn hv" [class.primary]="!auth.canEdit()">
+        <app-icon name="reports" [size]="16" [gap]="8" />View reports
+      </a>
+    </div>
+  </section>
+
+  <!-- Status banner -->
+  @if (d.low_stock_count > 0) {
+    <div class="banner warn hv">
+      <app-icon name="warning" [size]="18" [gap]="8" />
+      {{ d.low_stock_count }} material(s) at or below minimum stock. Check the alerts below.
+    </div>
+  } @else {
+    <div class="banner ok hv">
+      <app-icon name="check" [size]="18" [gap]="8" />
+      All materials are above their minimum stock level.
+    </div>
+  }
+
+  <!-- Stat cards -->
+  <div class="stats">
+    <div class="stat hv">
+      <div class="icon amber" style="color: #b45309">
+        <app-icon name="money" [size]="26" />
+      </div>
+      <div>
+        <div class="label">Total Inventory Value</div>
+        <div class="number">₱{{ d.total_inventory_value | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="stat hv">
+      <div class="icon blue" style="color: #1d4ed8">
+        <app-icon name="materials" [size]="26" />
+      </div>
+      <div>
+        <div class="label">Materials Recorded</div>
+        <div class="number">{{ d.total_materials }}</div>
+      </div>
+    </div>
+
+    <div class="stat hv">
+      <div class="icon red" style="color: #dc2626">
+        <app-icon name="warning" [size]="26" />
+      </div>
+      <div>
+        <div class="label">Low-Stock Materials</div>
+        <div class="number">{{ d.low_stock_count }}</div>
+      </div>
+    </div>
+
+    <div class="stat hv">
+      <div class="icon green" style="color: #16a34a">
+        <app-icon name="refresh" [size]="26" />
+      </div>
+      <div>
+        <div class="label">Transactions This Month</div>
+        <div class="number">{{ d.transactions_this_month }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock levels and alerts -->
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Stock Levels</h2>
+        <span class="legend">
+          <i class="dot good"></i>Healthy
+          <i class="dot watch"></i>Watch
+          <i class="dot low"></i>Low
+        </span>
+      </div>
+
+      @for (s of d.stock_levels; track s.id) {
+        <div class="level">
+          <div class="level-top">
+            <span class="lname">{{ s.name }} <small>{{ s.category }}</small></span>
+            <span class="lval">
+              {{ s.current_stock | number: '1.0-2' }} / min {{ s.min_stock | number: '1.0-2' }}
+              {{ s.unit }}
+            </span>
+          </div>
+          <div class="track">
+            <div
+              class="fill"
+              [class.good]="stockStatus(s) === 'good'"
+              [class.watch]="stockStatus(s) === 'watch'"
+              [class.low]="stockStatus(s) === 'low'"
+              [style.width.%]="stockPercent(s)"
+            ></div>
+          </div>
+        </div>
+      } @empty {
+        <p class="note">No materials yet.</p>
+      }
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Low-Stock Alerts</h2>
+      </div>
+
+      @for (m of d.low_stock; track m.id) {
+        <div class="alert-item">
+          <div>
+            <strong>{{ m.name }}</strong>
+            <small>{{ m.category?.name }}</small>
+          </div>
+          <div class="alert-qty">
+            <span class="badge low">{{ m.current_stock | number: '1.2-2' }} {{ m.unit }}</span>
+            <small>min {{ m.min_stock | number: '1.2-2' }}</small>
+          </div>
+        </div>
+      } @empty {
+        <p class="note">✓ Nothing needs replenishing right now.</p>
+      }
+    </section>
+  </div>
+
+  <!-- Sales pie chart and activity -->
+  <div class="grid-eq">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Sales Overview</h2>
+        <div class="toggles">
+          <button
+            type="button"
+            class="pill-btn"
+            [class.active]="salesPeriod() === 'month'"
+            (click)="setPeriod('month')"
+          >
+            {{ d.sales_month_label || 'This month' }}
+          </button>
+          <button
+            type="button"
+            class="pill-btn"
+            [class.active]="salesPeriod() === 'all'"
+            (click)="setPeriod('all')"
+          >
+            All time
+          </button>
+        </div>
+      </div>
+
+      <div class="toggles view-toggles">
+        <button
+          type="button"
+          class="pill-btn small"
+          [class.active]="salesView() === 'category'"
+          (click)="setView('category')"
+        >
+          By category
+        </button>
+        <button
+          type="button"
+          class="pill-btn small"
+          [class.active]="salesView() === 'material'"
+          (click)="setView('material')"
+        >
+          By material
+        </button>
+      </div>
+
+      @if (slices().length > 0) {
+        <div class="pie-wrap">
+          <svg class="pie-svg" viewBox="0 0 200 200" role="img" aria-label="Pie chart of sales">
+            <g class="pie">
+              @for (s of slices(); track s.label; let i = $index) {
+                @if (s.full) {
+                  <circle
+                    class="slice"
+                    cx="100"
+                    cy="100"
+                    r="88"
+                    [attr.fill]="s.color"
+                    [class.dim]="hovered() !== null && hovered() !== i"
+                    (mouseenter)="hover(i)"
+                    (mouseleave)="hover(null)"
+                    (click)="hover(i)"
+                  />
+                } @else {
+                  <path
+                    class="slice"
+                    [attr.d]="s.path"
+                    [attr.fill]="s.color"
+                    [class.dim]="hovered() !== null && hovered() !== i"
+                    [style.transform]="
+                      hovered() === i ? 'translate(' + s.dx + 'px, ' + s.dy + 'px)' : 'none'
+                    "
+                    (mouseenter)="hover(i)"
+                    (mouseleave)="hover(null)"
+                    (click)="hover(i)"
+                  />
+                }
+              }
+            </g>
+          </svg>
+
+          <div class="pie-info">
+            @if (activeSlice(); as a) {
+              <strong>{{ a.label }}</strong>
+              <span>₱{{ a.value | number: '1.2-2' }} ({{ a.percent }}%)</span>
+            } @else {
+              <strong>₱{{ salesTotal() | number: '1.2-2' }}</strong>
+              <span>Total sales</span>
+            }
+          </div>
+
+          <div class="pie-legend">
+            @for (s of slices(); track s.label; let i = $index) {
+              <div
+                class="legend-row"
+                [class.active]="hovered() === i"
+                (mouseenter)="hover(i)"
+                (mouseleave)="hover(null)"
+              >
+                <span class="swatch" [style.background]="s.color"></span>
+                <span class="name">{{ s.label }}</span>
+                <span class="amt">₱{{ s.value | number: '1.2-2' }}</span>
+                <span class="pct">{{ s.percent }}%</span>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <p class="note">No sales recorded for this period yet.</p>
+      }
+
+      <p class="note small">Sales are counted from Stock Out records, at the unit price at that time.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Activity, Last 7 Days</h2>
+        <span class="legend">
+          <i class="dot in"></i>Stock In
+          <i class="dot out"></i>Stock Out
+        </span>
+      </div>
+
+      <div class="chart">
+        @for (a of d.activity; track a.date) {
+          <div class="col">
+            <div class="bars">
+              <div
+                class="bar in"
+                [style.height.%]="barHeight(a.stock_in)"
+                [title]="a.stock_in + ' stock-in'"
+              ></div>
+              <div
+                class="bar out"
+                [style.height.%]="barHeight(a.stock_out)"
+                [title]="a.stock_out + ' stock-out'"
+              ></div>
+            </div>
+            <div class="clabel">{{ a.label }}</div>
+          </div>
+        }
+      </div>
+      <p class="note small">Number of transactions per day.</p>
+    </section>
+  </div>
+
+  <!-- Recent transactions and category value -->
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Recent Transactions</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Material</th>
+              <th>Type</th>
+              <th class="num">Quantity</th>
+              <th class="num">Balance After</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of d.recent_transactions; track t.id) {
+              <tr>
+                <td>{{ t.transaction_date }}</td>
+                <td>{{ t.material?.name }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.ok]="t.type === 'stock_in'"
+                    [class.low]="t.type === 'stock_out'"
+                    [class.adj]="t.type === 'adjustment'"
+                  >
+                    {{ label(t.type) }}
+                  </span>
+                </td>
+                <td class="num">{{ t.quantity | number: '1.2-2' }}</td>
+                <td class="num">{{ t.balance_after | number: '1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty">No transactions yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Inventory Value by Category</h2>
+      </div>
+
+      @for (c of d.by_category; track c.category) {
+        <div class="level">
+          <div class="level-top">
+            <span class="lname">{{ c.category }} <small>{{ c.materials }} material(s)</small></span>
+            <span class="lval">₱{{ c.value | number: '1.2-2' }}</span>
+          </div>
+          <div class="track">
+            <div class="fill amber" [style.width.%]="categoryPercent(c.value)"></div>
+          </div>
+        </div>
+      } @empty {
+        <p class="note">No materials yet.</p>
+      }
+    </section>
+  </div>
+} @else if (!error()) {
+  <p class="loading">Loading dashboard...</p>
+}

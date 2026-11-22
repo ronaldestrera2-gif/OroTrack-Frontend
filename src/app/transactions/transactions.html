@@ -1,0 +1,308 @@
+<div class="tabs" role="tablist">
+  @for (t of tabs; track t.key) {
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [attr.data-type]="t.key"
+      [class.active]="activeTab() === t.key"
+      (click)="selectTab(t.key)"
+    >
+      <span>{{ t.icon }}</span>
+      {{ t.label }}
+      <span class="count">{{ count(t.key) }}</span>
+    </button>
+  }
+</div>
+
+<div class="layout">
+  <!-- Left: form -->
+  <section class="card form-card">
+    <h2>{{ heading() }}</h2>
+    <p class="tab-desc">{{ description() }}</p>
+
+    @if (message()) {
+      <p class="alert success">{{ message() }}</p>
+    }
+    @if (error()) {
+      <p class="alert danger">{{ error() }}</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="requestSave()" class="form-stack" novalidate>
+      <label>
+        Material
+        <select
+          formControlName="material_id"
+          [class.invalid]="showErr('material_id') && errors().material"
+        >
+          <option [ngValue]="0" disabled>Select material</option>
+          @for (m of materials(); track m.id) {
+            <option [ngValue]="m.id">{{ m.name }} ({{ m.category?.name }})</option>
+          }
+        </select>
+        @if (showErr('material_id') && errors().material) {
+          <span class="field-error">{{ errors().material }}</span>
+        }
+      </label>
+
+      @if (selected(); as m) {
+        <p class="stock-hint">
+          Current stock of <strong>{{ m.name }}</strong>:
+          <strong>{{ m.current_stock | number: '1.2-2' }} {{ m.unit }}</strong>
+        </p>
+      }
+
+      <label>
+        Quantity
+        <input
+          type="number"
+          formControlName="quantity"
+          step="0.01"
+          [class.invalid]="showErr('quantity') && errors().quantity"
+        />
+        @if (showErr('quantity') && errors().quantity) {
+          <span class="field-error">{{ errors().quantity }}</span>
+        }
+      </label>
+
+      @if (activeTab() === 'adjustment') {
+        <p class="hint">For example, enter -5 to reduce the stock by 5 after a stock count.</p>
+      }
+
+      <label>
+        Date
+        <input
+          type="date"
+          formControlName="transaction_date"
+          [attr.max]="maxDate"
+          [class.invalid]="showErr('transaction_date') && errors().date"
+        />
+        @if (showErr('transaction_date') && errors().date) {
+          <span class="field-error">{{ errors().date }}</span>
+        }
+      </label>
+
+      <label>
+        {{ partyLabel() }}
+        <input type="text" formControlName="party_name" placeholder="Optional" />
+      </label>
+
+      <label>
+        Remarks
+        <input type="text" formControlName="remarks" placeholder="Optional" />
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">{{ heading() }}</button>
+        <button type="button" class="btn" (click)="resetForm()">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Right: history -->
+  <section class="card history-card">
+    <div class="history-head">
+      <div>
+        <h2>Transaction History</h2>
+        <p class="sub">{{ visible().length }} record(s). Click a column title to sort.</p>
+      </div>
+
+      <div class="controls">
+        <label class="sortsel">
+          Sort by
+          <select #sortSelect (change)="applySort(sortSelect.value)">
+            <option value="datetime:desc" [selected]="sortChoice() === 'datetime:desc'">
+              Date and time (newest first)
+            </option>
+            <option value="datetime:asc" [selected]="sortChoice() === 'datetime:asc'">
+              Date and time (oldest first)
+            </option>
+            <option value="type:stock_in" [selected]="sortChoice() === 'type:stock_in'">
+              Type: Stock In first
+            </option>
+            <option value="type:stock_out" [selected]="sortChoice() === 'type:stock_out'">
+              Type: Stock Out first
+            </option>
+            <option value="material:asc" [selected]="sortChoice() === 'material:asc'">
+              Material (A to Z)
+            </option>
+            <option value="quantity:desc" [selected]="sortChoice() === 'quantity:desc'">
+              Quantity (high to low)
+            </option>
+            <option value="quantity:asc" [selected]="sortChoice() === 'quantity:asc'">
+              Quantity (low to high)
+            </option>
+            <option value="custom" disabled [selected]="isCustomSort()">Custom (column title)</option>
+          </select>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [checked]="showAll()" (change)="toggleShowAll()" />
+          Show all types
+        </label>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <button type="button" class="sort" [class.active]="sortKey() === 'datetime'" (click)="setSort('datetime')">
+                Date and Time <span class="arrow">{{ arrow('datetime') }}</span>
+              </button>
+            </th>
+            <th>
+              <button type="button" class="sort" [class.active]="sortKey() === 'material'" (click)="setSort('material')">
+                Material <span class="arrow">{{ arrow('material') }}</span>
+              </button>
+            </th>
+            @if (showAll()) {
+              <th>
+                <button
+                  type="button"
+                  class="sort"
+                  title="Click to put Stock In or Stock Out first"
+                  [class.active]="sortKey() === 'type'"
+                  (click)="setSort('type')"
+                >
+                  Type <span class="arrow">{{ arrow('type') }}</span>
+                </button>
+              </th>
+            }
+            <th class="num">
+              <button type="button" class="sort" [class.active]="sortKey() === 'quantity'" (click)="setSort('quantity')">
+                Quantity <span class="arrow">{{ arrow('quantity') }}</span>
+              </button>
+            </th>
+            <th class="num">
+              <button type="button" class="sort" [class.active]="sortKey() === 'balance'" (click)="setSort('balance')">
+                Balance After <span class="arrow">{{ arrow('balance') }}</span>
+              </button>
+            </th>
+            <th>
+              <button type="button" class="sort" [class.active]="sortKey() === 'party'" (click)="setSort('party')">
+                Supplier / Customer <span class="arrow">{{ arrow('party') }}</span>
+              </button>
+            </th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of visible(); track t.id) {
+            <tr>
+              <td class="when">
+                <div>{{ t.transaction_date }}</div>
+                <small class="time">{{ timeOf(t) }}</small>
+              </td>
+              <td>{{ t.material?.name }}</td>
+              @if (showAll()) {
+                <td>
+                  <span
+                    class="badge"
+                    [class.ok]="t.type === 'stock_in'"
+                    [class.low]="t.type === 'stock_out'"
+                    [class.adj]="t.type === 'adjustment'"
+                  >
+                    {{ label(t.type) }}
+                  </span>
+                </td>
+              }
+              <td class="num">{{ t.quantity | number: '1.2-2' }}</td>
+              <td class="num">{{ t.balance_after | number: '1.2-2' }}</td>
+              <td>{{ t.party_name }}</td>
+              <td>{{ t.remarks }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="showAll() ? 7 : 6" class="empty">{{ emptyText() }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Confirmation pop-up -->
+@if (pending(); as p) {
+  <div class="modal-backdrop" (click)="cancelConfirm()">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-icon" [attr.data-type]="p.payload.type">{{ activeIcon() }}</div>
+      <h3 id="confirm-title">Confirm {{ label(p.payload.type) }}</h3>
+      <p class="modal-sub">Please review the details. Saving will update the stock balance.</p>
+
+      <dl class="summary">
+        <div>
+          <dt>Material</dt>
+          <dd>{{ p.material.name }} <small>({{ p.material.category?.name }})</small></dd>
+        </div>
+        <div>
+          <dt>Type</dt>
+          <dd>
+            <span
+              class="badge"
+              [class.ok]="p.payload.type === 'stock_in'"
+              [class.low]="p.payload.type === 'stock_out'"
+              [class.adj]="p.payload.type === 'adjustment'"
+            >
+              {{ label(p.payload.type) }}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>Quantity</dt>
+          <dd>{{ p.qty | number: '1.2-2' }} {{ p.material.unit }}</dd>
+        </div>
+        <div>
+          <dt>Date</dt>
+          <dd>{{ p.payload.transaction_date }}</dd>
+        </div>
+        @if (p.payload.party_name) {
+          <div>
+            <dt>{{ partyLabel() }}</dt>
+            <dd>{{ p.payload.party_name }}</dd>
+          </div>
+        }
+        @if (p.payload.remarks) {
+          <div>
+            <dt>Remarks</dt>
+            <dd>{{ p.payload.remarks }}</dd>
+          </div>
+        }
+      </dl>
+
+      <div class="balance-box">
+        <div>
+          <small>Stock before</small>
+          <strong>{{ p.before | number: '1.2-2' }}</strong>
+        </div>
+        <span class="to">→</span>
+        <div>
+          <small>Stock after</small>
+          <strong [class.low-after]="p.lowWarning">{{ p.after | number: '1.2-2' }}</strong>
+        </div>
+      </div>
+
+      @if (p.lowWarning) {
+        <p class="warn">
+          ⚠️ The stock will be at or below the minimum level of
+          {{ p.material.min_stock | number: '1.2-2' }} {{ p.material.unit }}.
+        </p>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn" [disabled]="saving()" (click)="cancelConfirm()">Cancel</button>
+        <button type="button" class="btn primary" [disabled]="saving()" (click)="confirmSave()">
+          {{ saving() ? 'Saving...' : 'Confirm ' + label(p.payload.type) }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,131 @@
+<div class="landing">
+  <!-- Top bar -->
+  <header class="lnav" [class.scrolled]="scrolled()">
+    <a class="lbrand" routerLink="/" aria-label="OroTrack home">
+      <app-logo variant="dark" [width]="150" [animated]="true" />
+    </a>
+
+    <div class="llinks">
+      <button type="button" class="link" (click)="scrollTo('features')">Features</button>
+      <button type="button" class="link" (click)="scrollTo('how')">How it works</button>
+      @if (auth.isLoggedIn()) {
+        <a class="cta" routerLink="/dashboard">Go to Dashboard</a>
+      } @else {
+        <a class="cta" routerLink="/login">Sign In</a>
+      }
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="dust" aria-hidden="true">
+      @for (d of dust; track d) {
+        <span
+          [style.left.%]="(d * 37) % 100"
+          [style.width.px]="4 + (d % 4) * 3"
+          [style.height.px]="4 + (d % 4) * 3"
+          [style.animation-delay.s]="(d % 7) * 0.9"
+          [style.animation-duration.s]="9 + (d % 5) * 2"
+        ></span>
+      }
+    </div>
+
+    <div class="hero-grid">
+      <div class="hero-content">
+        <span class="pill">Construction Soil and Rock Inventory</span>
+        <h1>Know exactly what’s in your <span class="grad">yard</span>.</h1>
+        <p>
+          OroTrack is a web-based inventory system for Oro Construction Soil and Rock. Track soil,
+          sand, gravel, and crushed rock from delivery to release.
+        </p>
+        <div class="hero-actions">
+          @if (auth.isLoggedIn()) {
+            <a class="btn-hero primary" routerLink="/dashboard">Open Dashboard</a>
+          } @else {
+            <a class="btn-hero primary" routerLink="/login">Sign In to OroTrack</a>
+          }
+          <button type="button" class="btn-hero ghost" (click)="scrollTo('features')">
+            Explore features
+          </button>
+        </div>
+      </div>
+
+      <div class="scene-wrap">
+        <div class="scene" aria-hidden="true">
+          <div class="chip chip-a">📥 Stock In +200 cu.m</div>
+          <div class="chip chip-b">⚠️ Low stock alert</div>
+
+          <div class="pile soil"></div>
+          <div class="pile sand"></div>
+          <div class="pile gravel"></div>
+          <div class="pile rock"></div>
+          <div class="ground"></div>
+        </div>
+
+        <div class="legend">
+          <span><i class="dot d-soil"></i>Soil</span>
+          <span><i class="dot d-sand"></i>Sand</span>
+          <span><i class="dot d-gravel"></i>Gravel</span>
+          <span><i class="dot d-rock"></i>Crushed Rock</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="section-head reveal">
+      <h2>Everything you need to manage your materials</h2>
+      <p>
+        One central place to record, monitor, and report on your inventory, replacing handwritten
+        notes and scattered spreadsheets.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      @for (f of features; track f.title; let i = $index) {
+        <article class="feature reveal" [style.transition-delay.ms]="i * 80">
+          <div class="ficon">{{ f.icon }}</div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.text }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="section">
+    <div class="section-head reveal">
+      <h2>How it works</h2>
+      <p>Three simple steps from setup to reports.</p>
+    </div>
+
+    <div class="steps">
+      @for (s of steps; track s.title; let i = $index) {
+        <div class="step reveal" [style.transition-delay.ms]="i * 120">
+          <div class="snum">{{ i + 1 }}</div>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Call to action -->
+  <section class="cta-band">
+    <div class="reveal">
+      <h2>Ready to take control of your inventory?</h2>
+      <p>Sign in to see your dashboard, stock levels, and reports.</p>
+      @if (auth.isLoggedIn()) {
+        <a class="btn-hero primary" routerLink="/dashboard">Open Dashboard</a>
+      } @else {
+        <a class="btn-hero primary" routerLink="/login">Sign In</a>
+      }
+    </div>
+  </section>
+
+  <footer class="lfooter">
+    <p>OroTrack · Oro Construction Soil and Rock, Tagum City, Davao del Norte</p>
+    <p>© {{ year }} OroTrack. All rights reserved.</p>
+  </footer>
+</div>

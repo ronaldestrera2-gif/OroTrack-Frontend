@@ -1,0 +1,94 @@
+<div [class.layout]="showShell()" [class.menu-open]="menuOpen()">
+  @if (showShell()) {
+    <aside class="sidebar">
+      <a class="side-brand" routerLink="/dashboard" aria-label="OroTrack dashboard">
+        <app-logo variant="dark" [width]="200" [animated]="true" />
+      </a>
+
+      <div class="side-label">Menu</div>
+
+      <nav class="side-nav" (click)="closeMenu()">
+        <a routerLink="/dashboard" routerLinkActive="active" class="hv">
+          <span class="ico"><app-icon name="dashboard" [size]="20" /></span>Dashboard
+        </a>
+        @if (auth.canEdit()) {
+          <a routerLink="/materials" routerLinkActive="active" class="hv">
+            <span class="ico"><app-icon name="materials" [size]="20" /></span>Materials
+          </a>
+          <a routerLink="/transactions" routerLinkActive="active" class="hv">
+            <span class="ico"><app-icon name="transactions" [size]="20" /></span>Stock In / Out
+          </a>
+        }
+        <a routerLink="/reports" routerLinkActive="active" class="hv">
+          <span class="ico"><app-icon name="reports" [size]="20" /></span>Reports
+        </a>
+        @if (auth.user()?.role === 'admin') {
+          <a routerLink="/users" routerLinkActive="active" class="hv">
+            <span class="ico"><app-icon name="users" [size]="20" /></span>Users
+          </a>
+        }
+      </nav>
+
+      @if (auth.user(); as u) {
+        <div class="side-user">
+          <span class="avatar">{{ initial() }}</span>
+          <span class="who">
+            <strong>{{ u.name }}</strong>
+            <small>{{ u.role }}</small>
+          </span>
+        </div>
+        <button type="button" class="logout-btn hv" (click)="askLogout()">
+          <app-icon name="logout" [size]="18" />
+          Logout
+        </button>
+      }
+    </aside>
+
+    <div class="backdrop" (click)="closeMenu()"></div>
+  }
+
+  <div [class.content]="showShell()">
+    @if (showShell()) {
+      <header class="mobilebar">
+        <button type="button" class="burger hv" aria-label="Open menu" (click)="toggleMenu()">
+          <app-icon name="menu" [size]="22" />
+        </button>
+        <app-logo variant="dark" [width]="130" [animated]="true" />
+      </header>
+    }
+
+    <main [class.container]="showShell()">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<!-- Logout confirmation pop-up -->
+@if (confirmLogout()) {
+  <div class="logout-backdrop" (click)="cancelLogout()">
+    <div
+      class="logout-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="logout-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="logout-icon"><app-icon name="logout" [size]="28" /></div>
+      <h3 id="logout-title">Log out of OroTrack?</h3>
+
+      @if (auth.user(); as u) {
+        <p class="logout-user">
+          Signed in as <strong>{{ u.name }}</strong>
+          <span class="role">{{ u.role }}</span>
+        </p>
+      }
+
+      <p class="logout-sub">You will need to sign in again to use the system.</p>
+
+      <div class="logout-actions">
+        <button type="button" class="btn" (click)="cancelLogout()">Stay signed in</button>
+        <button type="button" class="btn danger-solid" (click)="doLogout()">Log out</button>
+      </div>
+    </div>
+  </div>
+}

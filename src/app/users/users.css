@@ -1,0 +1,122 @@
+/* ---------- Tabs ---------- */
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -2px;
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: none;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  background: #fff;
+  color: #1f2937;
+}
+
+.tab.active {
+  background: #fff;
+  color: #92400e;
+  border-bottom-color: #f59e0b;
+}
+
+.count {
+  min-width: 22px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 12px;
+  text-align: center;
+}
+
+.count.hot {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* ---------- Cards and tables ---------- */
+
+.sub {
+  margin: -4px 0 14px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.pending-card {
+  border-left: 5px solid #f59e0b;
+}
+
+.badge.role {
+  background: #e0e7ff;
+  color: #3730a3;
+  text-transform: capitalize;
+}
+
+.badge.pend {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.sus {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.btn.warn {
+  color: #b45309;
+  border-color: #fcd34d;
+}
+
+tr.suspended td:not(.row-actions) {
+  opacity: 0.6;
+}
+
+/* Keep the action buttons inside the table row so the row lines stay unbroken */
+.row-actions {
+  display: table-cell;
+  white-space: nowrap;
+}
+
+.row-actions .btn + .btn {
+  margin-left: 6px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  font-weight: normal;
+  color: #6b7280;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.when {
+  white-space: nowrap;
+}
+
+.details {
+  max-width: 280px;
+  color: #4b5563;
+  font-size: 13px;
+}
