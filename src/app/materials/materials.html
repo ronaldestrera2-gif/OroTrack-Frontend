@@ -65,6 +65,47 @@
 <section class="card">
   <h2>Materials</h2>
 
+  <div class="grid" style="margin-bottom: 16px;">
+    <label>
+      Search
+      <input
+        type="text"
+        placeholder="Search name or category"
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)"
+      />
+    </label>
+
+    <label>
+      Category
+      <select
+        [value]="categoryFilter()"
+        (change)="categoryFilter.set(+$any($event.target).value)"
+      >
+        <option [value]="0">All categories</option>
+        @for (c of categories(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Status
+      <select
+        [value]="statusFilter()"
+        (change)="statusFilter.set($any($event.target).value)"
+      >
+        <option value="all">All</option>
+        <option value="ok">In stock</option>
+        <option value="low">Low stock</option>
+      </select>
+    </label>
+
+    <div class="actions" style="align-self: end;">
+      <button type="button" class="btn" (click)="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
@@ -81,7 +122,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (m of materials(); track m.id) {
+        @for (m of filteredMaterials(); track m.id) {
           <tr>
             <td>{{ m.name }}</td>
             <td>{{ m.category?.name }}</td>
@@ -104,7 +145,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="9" class="empty">No materials yet. Add your first one above.</td>
+            <td colspan="9" class="empty">No materials match your filters.</td>
           </tr>
         }
       </tbody>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api, Category, MaterialItem } from '../api';
@@ -17,6 +17,28 @@ export class Materials implements OnInit {
   editingId = signal<number | null>(null);
   message = signal('');
   error = signal('');
+
+  searchTerm = signal('');
+  categoryFilter = signal(0);
+  statusFilter = signal<'all' | 'low' | 'ok'>('all');
+
+  filteredMaterials = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const cat = this.categoryFilter();
+    const status = this.statusFilter();
+
+    return this.materials().filter((m) => {
+      const matchesSearch =
+        !term ||
+        m.name.toLowerCase().includes(term) ||
+        (m.category?.name ?? '').toLowerCase().includes(term);
+      const matchesCategory = !cat || Number(m.category_id) === cat;
+      const low = this.isLow(m);
+      const matchesStatus = status === 'all' || (status === 'low' ? low : !low);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  });
 
   form = this.fb.nonNullable.group({
     category_id: [0, [Validators.required, Validators.min(1)]],
@@ -41,6 +63,12 @@ export class Materials implements OnInit {
       next: (data) => this.materials.set(data),
       error: () => this.error.set('Cannot load materials. Is the backend running?'),
     });
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.categoryFilter.set(0);
+    this.statusFilter.set('all');
   }
 
   save(): void {
