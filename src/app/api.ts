@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface Category {
   id: number;
@@ -114,7 +115,7 @@ export interface ReportFilters {
 @Injectable({ providedIn: 'root' })
 export class Api {
   private http = inject(HttpClient);
-  private baseUrl = 'http://127.0.0.1:8000/api';
+  private baseUrl = environment.apiUrl;
 
   getDashboard(): Observable<DashboardData> {
     return this.http.get<DashboardData>(`${this.baseUrl}/dashboard`);

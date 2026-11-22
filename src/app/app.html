@@ -63,6 +63,9 @@
   </div>
 </div>
 
+<!-- Light / dark mode button, shown on every page -->
+<app-theme-toggle />
+
 <!-- Logout confirmation pop-up -->
 @if (confirmLogout()) {
   <div class="logout-backdrop" (click)="cancelLogout()">

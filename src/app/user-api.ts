@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface UserItem {
   id: number;
@@ -36,7 +37,7 @@ export interface ResetRequest {
 @Injectable({ providedIn: 'root' })
 export class UserApi {
   private http = inject(HttpClient);
-  private baseUrl = 'http://127.0.0.1:8000/api';
+  private baseUrl = environment.apiUrl;
 
   getUsers(): Observable<UserItem[]> {
     return this.http.get<UserItem[]>(`${this.baseUrl}/users`);

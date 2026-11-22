@@ -5,10 +5,11 @@ import { filter, map } from 'rxjs';
 import { Auth } from './auth';
 import { Icon } from './icon/icon';
 import { Logo } from './logo/logo';
+import { ThemeToggle } from './theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Logo, Icon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Logo, Icon, ThemeToggle],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

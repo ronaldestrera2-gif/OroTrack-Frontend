@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export type Role = 'admin' | 'inventory' | 'management';
 
@@ -31,7 +32,7 @@ const USER_KEY = 'orotrack_user';
 export class Auth {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private baseUrl = 'http://127.0.0.1:8000/api';
+  private baseUrl = environment.apiUrl;
 
   user = signal<AuthUser | null>(this.loadUser());
 
