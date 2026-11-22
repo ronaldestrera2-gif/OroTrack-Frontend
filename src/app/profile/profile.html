@@ -1,0 +1,54 @@
+<section class="card profile-card">
+  <h2>My Profile</h2>
+
+  @if (message()) {
+    <p class="alert success">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="alert danger">{{ error() }}</p>
+  }
+
+  <div class="profile-photo-row">
+    <div class="profile-photo">
+      @if (previewPhoto(); as photo) {
+        <img [src]="photo" alt="Profile photo" />
+      } @else {
+        <span>{{ initial() }}</span>
+      }
+    </div>
+
+    <div class="profile-photo-actions">
+      <label class="btn">
+        Choose photo
+        <input type="file" accept="image/*" (change)="onFileChange($event)" hidden />
+      </label>
+      @if (previewPhoto()) {
+        <button type="button" class="btn danger" (click)="clearPhoto()">Remove photo</button>
+      }
+      <small>JPG, PNG or WEBP. It is resized automatically.</small>
+    </div>
+  </div>
+
+  <div class="grid">
+    <label>
+      Full name
+      <input type="text" [value]="name()" (input)="onNameInput($event)" maxlength="255" />
+    </label>
+
+    <label>
+      Position
+      <input type="text" [value]="roleLabel()" disabled />
+    </label>
+
+    <label>
+      Email
+      <input type="email" [value]="auth.user()?.email ?? ''" disabled />
+    </label>
+  </div>
+
+  <div class="actions profile-actions">
+    <button type="button" class="btn primary" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Saving...' : 'Save changes' }}
+    </button>
+  </div>
+</section>

@@ -11,10 +11,16 @@ export interface AuthUser {
   name: string;
   email: string;
   role: Role;
+  profile_photo?: string | null;
 }
 
 interface LoginResponse {
   token: string;
+  user: AuthUser;
+}
+
+interface ProfileResponse {
+  message: string;
   user: AuthUser;
 }
 
@@ -63,6 +69,26 @@ export class Auth {
       .pipe(tap((res) => this.startSession(res)));
   }
 
+  getProfile(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.baseUrl}/profile`).pipe(
+      tap((user) => this.saveUser(user)),
+    );
+  }
+
+  updateProfile(
+    name: string,
+    photo: string | null,
+    removePhoto: boolean,
+  ): Observable<ProfileResponse> {
+    return this.http
+      .post<ProfileResponse>(`${this.baseUrl}/profile`, {
+        name,
+        photo,
+        remove_photo: removePhoto,
+      })
+      .pipe(tap((res) => this.saveUser(res.user)));
+  }
+
   logout(): void {
     const done = () => {
       this.clearSession();
@@ -83,8 +109,16 @@ export class Auth {
 
   private startSession(res: LoginResponse): void {
     localStorage.setItem(TOKEN_KEY, res.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-    this.user.set(res.user);
+    this.saveUser(res.user);
+  }
+
+  private saveUser(user: AuthUser): void {
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      // storage full: keep working without saving
+    }
+    this.user.set(user);
   }
 
   private loadUser(): AuthUser | null {

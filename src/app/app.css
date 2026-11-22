@@ -101,3 +101,22 @@
   background: #991b1b;
   filter: none;
 }
+
+/* Clickable profile box in the sidebar */
+.profile-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.side-user .avatar {
+  overflow: hidden;
+}
+
+.side-user .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}

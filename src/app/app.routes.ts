@@ -4,6 +4,7 @@ import { ForgotPassword } from './forgot-password/forgot-password';
 import { Landing } from './landing/landing';
 import { Login } from './login/login';
 import { Materials } from './materials/materials';
+import { Profile } from './profile/profile';
 import { Register } from './register/register';
 import { Reports } from './reports/reports';
 import { Transactions } from './transactions/transactions';
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'register', component: Register },
   { path: 'forgot-password', component: ForgotPassword },
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'reports', component: Reports, canActivate: [authGuard] },
   {
     path: 'materials',

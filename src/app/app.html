@@ -30,13 +30,25 @@
       </nav>
 
       @if (auth.user(); as u) {
-        <div class="side-user">
-          <span class="avatar">{{ initial() }}</span>
+        <a
+          class="side-user profile-link hv"
+          routerLink="/profile"
+          routerLinkActive="active"
+          title="Open my profile"
+          (click)="closeMenu()"
+        >
+          <span class="avatar">
+            @if (u.profile_photo) {
+              <img [src]="u.profile_photo" alt="Profile photo" />
+            } @else {
+              {{ initial() }}
+            }
+          </span>
           <span class="who">
             <strong>{{ u.name }}</strong>
             <small>{{ u.role }}</small>
           </span>
-        </div>
+        </a>
         <button type="button" class="logout-btn hv" (click)="askLogout()">
           <app-icon name="logout" [size]="18" />
           Logout
